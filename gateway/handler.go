@@ -17,7 +17,7 @@ var userServiceURL string
 func InitEnv() {
 	authServiceURL = os.Getenv("AUTH_SERVICE_URL")
 	if authServiceURL == "" {
-		authServiceURL = "http://localhost:8080" // Default value if not set (for local development)
+		authServiceURL = "http://localhost:8000" // Default value if not set (for local development)
 	}
 
 	billingServiceURL := os.Getenv("BILLING_SERVICE_URL")
