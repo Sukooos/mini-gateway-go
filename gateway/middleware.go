@@ -2,12 +2,9 @@ package main
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-jwt/jwt/v5"
-	"github.com/golang-jwt/jwt"
 	"github.com/golang-jwt/jwt/v5"
 )
 

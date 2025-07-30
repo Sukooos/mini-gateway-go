@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"os"
-	"fmt"
 	"io"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +12,7 @@ import (
 
 var authServiceURL string
 var billingServiceURL string
+var userServiceURL string
 
 func InitEnv() {
 	authServiceURL = os.Getenv("AUTH_SERVICE_URL")
@@ -23,6 +23,11 @@ func InitEnv() {
 	billingServiceURL := os.Getenv("BILLING_SERVICE_URL")
 	if billingServiceURL == "" {
 		billingServiceURL = "http://localhost:8002" // Default value if not set (for local development)
+	}
+
+	userServiceURL = os.Getenv("USER_SERVICE_URL")
+	if userServiceURL == "" {
+		userServiceURL = "http://localhost:8001" // Default value if not set (for local development)
 	}
 }
 
@@ -108,14 +113,42 @@ func ProxyBillingCreate(c *gin.Context) {
 	c.Data(resp.StatusCode(), "application/json", resp.Body())
 }
 
-// Helper convert interface{} to string (safe)
-func toString(v interface{}) string {
-	switch val := v.(type) {
-	case string:
-		return val
-	case int:
-		return fmt.Sprintf("%d", val)
-	default:
-		return ""
+func ProxyUserProfile(c *gin.Context) {
+	client := resty.New()
+	userID := c.GetInt("user_id")
+
+	resp, err := client.R().
+		SetHeader("X-User-ID", toString(userID)).
+		Get(userServiceURL + "/profile")
+
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to connect to user service"})
+		return
 	}
+	c.Data(resp.StatusCode(), "application/json", resp.Body())
 }
+
+func ProxyUserUpdate(c *gin.Context) {
+	client := resty.New()
+	userID := c.GetInt("user_id")
+
+	// Copy body
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body"})
+		return
+	}
+
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetHeader("X-User-ID", toString(userID)).
+		SetBody(bodyBytes).
+		Put(userServiceURL + "/profile")
+
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to connect to user service"})
+		return
+	}
+	c.Data(resp.StatusCode(), "application/json", resp.Body())
+}
+

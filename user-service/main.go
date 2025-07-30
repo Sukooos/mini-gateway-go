@@ -14,5 +14,8 @@ func main() {
 		})
 	})
 
+	r.GET("/profile", UserProfileHandler) // Endpoint to get user profile
+	r.PUT("/profile", UserUpdateHandler)   // Endpoint to update user profile
+
 	r.Run(":8001") // Start the server on port 8001
 }
